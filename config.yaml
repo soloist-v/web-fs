@@ -1,0 +1,44 @@
+# web_fs 配置文件
+#
+# 修改后重启服务生效。
+# 若此文件不存在，服务器回退到环境变量（LISTEN_ADDR / FS_ROOT / RUST_LOG）或内置默认值。
+
+# ── 服务器 ────────────────────────────────────────────────────────────────────
+
+# 监听 IP 地址
+host: "0.0.0.0"
+
+# 监听端口
+port: 8080
+
+# 日志级别过滤器（trace / debug / info / warn / error）
+# 也可以使用完整格式，例如："web_fs=debug,tower_http=warn"
+log_level: "info"
+
+# ── 可访问的根路径列表 ────────────────────────────────────────────────────────
+#
+# 每个 root 在虚拟文件系统中对应 URL 的第一段路径。
+# 例如 name=data、path=/data，则浏览器访问路径 /data 即为宿主机 /data 目录。
+#
+# 规则：
+#   - name 不能包含 "/" 或空格（会被自动替换为 "_"）
+#   - path 支持绝对路径或相对路径（相对于服务器工作目录）
+#   - 至少需要配置一个 root
+#   - 可以配置任意多个 root
+
+roots:
+  - name: C
+    path: c:/
+  - name: D
+    path: d:/
+
+# 多 root 示例（取消注释以启用）：
+#
+#  - name: home
+#    path: /home
+#
+#  - name: data
+#    path: /data
+#
+#  - name: media
+#    path: /mnt/media
