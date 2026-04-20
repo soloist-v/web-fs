@@ -1,0 +1,70 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Cargo configuration for web_fs
+#
+# Cross-compilation target: aarch64-unknown-linux-musl
+# Goal: fully static binary with zero glibc / dynamic-library dependencies.
+#
+# ── Prerequisite: install the Rust target ────────────────────────────────────
+#   rustup target add aarch64-unknown-linux-musl
+#
+# ── Build options (choose ONE) ───────────────────────────────────────────────
+#
+# Option A — `cross` (recommended, Docker required, works on any host OS):
+#   cargo install cross --git https://github.com/cross-rs/cross
+#   cross build --release --target aarch64-unknown-linux-musl
+#
+# Option B — zig cc (no Docker, zig must be installed):
+#   cargo install cargo-zigbuild
+#   cargo zigbuild --release --target aarch64-unknown-linux-musl
+#
+# Option C — native musl toolchain (Linux host only):
+#   # Debian/Ubuntu: sudo apt install gcc-aarch64-linux-gnu musl-tools
+#   # Then ensure `aarch64-linux-musl-gcc` is on PATH.
+#   cargo build --release --target aarch64-unknown-linux-musl
+#
+# ── Building with the frontend embedded ──────────────────────────────────────
+#   # Build the frontend first (on the host):
+#   cd frontend && npm install && npm run build && cd ..
+#   # Then cross-compile (frontend/dist is embedded at compile time):
+#   cross build --release --target aarch64-unknown-linux-musl
+#   # Binary output:
+#   #   target/aarch64-unknown-linux-musl/release/web_fs
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Default build target ─────────────────────────────────────────────────────
+# Uncomment the line below to make aarch64-musl the default target so you can
+# run plain `cargo build` without specifying `--target` every time.
+#
+# [build]
+# target = "aarch64-unknown-linux-musl"
+
+# ── Target: aarch64-unknown-linux-musl ───────────────────────────────────────
+[target.aarch64-unknown-linux-musl]
+
+# Option C linker (native musl cross-compiler).
+# Ignored when using `cross` or `cargo-zigbuild` — those tools override the
+# linker themselves.
+linker = "aarch64-linux-musl-gcc"
+
+# Static C runtime linkage.
+# The musl target already defaults to static linking, but this flag makes it
+# explicit and ensures no glibc stubs are pulled in even if a C dependency
+# somehow tries to link against them.
+rustflags = [
+  "-C", "target-feature=+crt-static",
+  "-C", "link-self-contained=yes",
+]
+
+# ── Target: x86_64-unknown-linux-musl (optional, for local testing) ──────────
+[target.x86_64-unknown-linux-musl]
+rustflags = [
+  "-C", "target-feature=+crt-static",
+  "-C", "link-self-contained=yes",
+]
+
+# ── Alias shortcuts ──────────────────────────────────────────────────────────
+[alias]
+# Build a release binary for aarch64 Linux (musl, static) using `cross`
+build-aarch64 = "build --release --target aarch64-unknown-linux-musl"
+# Same but via cargo-zigbuild
+zigbuild-aarch64 = "zigbuild --release --target aarch64-unknown-linux-musl"
